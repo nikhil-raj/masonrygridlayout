@@ -10,6 +10,10 @@ global.IntersectionObserver = class IntersectionObserver {
   observe = jest.fn();
   unobserve = jest.fn();
   disconnect = jest.fn();
+  root = null;
+  rootMargin = "";
+  thresholds = [];
+  takeRecords = jest.fn();
 };
 
 const mockPhotos: Photo[] = [

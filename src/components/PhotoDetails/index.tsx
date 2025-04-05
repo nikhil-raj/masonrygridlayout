@@ -108,7 +108,7 @@ const PhotoDetail: React.FC = () => {
         <h3>{photo.alt}</h3>
         <p>Photographer: {photo.photographer}</p>
         <p>
-          <a href={photo.photographer_url} target="_blank">
+          <a href={photo.photographer_url} target="_blank" rel="noreferrer">
             {photo.photographer_url}
           </a>
         </p>
