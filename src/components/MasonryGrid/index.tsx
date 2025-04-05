@@ -5,9 +5,9 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Photo } from "../../types/photo";
-import { useNavigate } from "react-router-dom";
 import { fetchPhotos } from "./api";
 import Search from "../Search";
 const COLUMNCOUNT = 3;
@@ -111,7 +111,7 @@ const MasonryGrid = () => {
                 key={photo.id}
                 onClick={() => handleImageClick(photo.id)}
               >
-                <Image src={photo.src.medium} loading="lazy" />
+                <Image src={photo.src.medium} loading="lazy" alt={photo.alt} />
                 {columnIndex === 2 && index === column.length - 1 && (
                   <div ref={lastIntersection} />
                 )}
