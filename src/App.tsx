@@ -5,7 +5,7 @@ import PhotoDetail from "./components/PhotoDetails";
 import styled from "styled-components";
 
 const StyledHeader = styled.h1`
-  padding: 10px;
+  padding: 1 rem;
   text-align: center;
 `;
 

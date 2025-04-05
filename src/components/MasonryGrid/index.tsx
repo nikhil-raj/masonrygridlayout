@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { Photo } from "../../types/photo";
 import { PhotosApiResponse } from "../../types/apiResponse";
+import { useNavigate } from "react-router-dom";
 const COLUMNCOUNT = 3;
 const Container = styled.div`
   display: flex;
@@ -10,23 +11,24 @@ const Container = styled.div`
 
 const MasonryColumn = styled.div`
   flex: 1;
-  padding: 8px;
+  padding: 0.5rem;
 `;
 
 const ImageContainer = styled.div`
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   cursor: pointer;
 `;
 
 const Image = styled.img`
   width: 100%;
   display: block;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 `;
 
 const MasonryGrid = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const getPhotos = useCallback(async () => {
     setLoading(true);
 
@@ -69,13 +71,19 @@ const MasonryGrid = () => {
     return columnsArray;
   }, [photos]);
 
+  const handleImageClick = (photoId: number) => {
+    navigate(`/photo/${photoId}`);
+  };
   return (
     <Container>
       {loading && <div>Loading Photos...</div>}
       {columns.map((column, columnIndex) => (
         <MasonryColumn key={columnIndex}>
           {column.map((photo) => (
-            <ImageContainer key={photo.id}>
+            <ImageContainer
+              key={photo.id}
+              onClick={() => handleImageClick(photo.id)}
+            >
               <Image src={photo.src.medium} loading="lazy" />
             </ImageContainer>
           ))}
