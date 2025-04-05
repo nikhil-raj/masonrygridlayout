@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import styled from "styled-components";
 import { Photo } from "../../types/photo";
 import { PhotosApiResponse } from "../../types/apiResponse";
@@ -28,12 +34,15 @@ const Image = styled.img`
 const MasonryGrid = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastIntersection = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
-  const getPhotos = useCallback(async () => {
+  const getPhotos = useCallback(async (pageToFetch: number) => {
     setLoading(true);
 
     const apiKey = process.env.REACT_APP_PEXELS_API_KEY ?? "";
-    const url = `https://api.pexels.com/v1/search?query=nature&per_page=30&page=1`;
+    const url = `https://api.pexels.com/v1/search?query=nature&per_page=15&page=${pageToFetch}`;
 
     try {
       const response = await fetch(url, {
@@ -46,6 +55,7 @@ const MasonryGrid = () => {
 
       const data: PhotosApiResponse = await response.json();
       setPhotos((prevPhotos) => [...prevPhotos, ...data.photos]);
+      setPage(pageToFetch + 1);
     } catch (error) {
       console.error("Error fetching photos:", error);
     } finally {
@@ -55,8 +65,31 @@ const MasonryGrid = () => {
 
   useEffect(() => {
     setPhotos([]);
-    getPhotos();
+    getPhotos(1);
   }, [getPhotos]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    observer.current?.disconnect();
+
+    const handleIntersect: IntersectionObserverCallback = (entries) => {
+      const isVisible = entries[0].isIntersecting;
+      if (isVisible && photos.length > 0) {
+        getPhotos(page);
+      }
+    };
+
+    observer.current = new IntersectionObserver(handleIntersect);
+
+    const target = lastIntersection.current;
+    if (target) {
+      observer.current.observe(target);
+    }
+    return () => {
+      observer.current?.disconnect();
+    };
+  }, [loading, photos, page, getPhotos]);
 
   const columns = useMemo(() => {
     const columnsArray: Photo[][] = Array(COLUMNCOUNT)
@@ -79,12 +112,15 @@ const MasonryGrid = () => {
       {loading && <div>Loading Photos...</div>}
       {columns.map((column, columnIndex) => (
         <MasonryColumn key={columnIndex}>
-          {column.map((photo) => (
+          {column.map((photo: Photo, index: number) => (
             <ImageContainer
               key={photo.id}
               onClick={() => handleImageClick(photo.id)}
             >
               <Image src={photo.src.medium} loading="lazy" />
+              {columnIndex === 2 && index === column.length - 1 && (
+                <div ref={lastIntersection} />
+              )}
             </ImageContainer>
           ))}
         </MasonryColumn>
