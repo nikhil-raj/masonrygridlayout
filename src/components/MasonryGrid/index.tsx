@@ -7,10 +7,18 @@ import React, {
 } from "react";
 import styled from "styled-components";
 import { Photo } from "../../types/photo";
-import { PhotosApiResponse } from "../../types/apiResponse";
 import { useNavigate } from "react-router-dom";
+import { fetchPhotos } from "./api";
+import Search from "../Search";
 const COLUMNCOUNT = 3;
+
 const Container = styled.div`
+  padding: 0 2rem;
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+`;
+const PhotosContainer = styled.div`
   display: flex;
   width: 100%;
 `;
@@ -35,38 +43,23 @@ const MasonryGrid = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [searchparam, setSearchParam] = useState("");
   const observer = useRef<IntersectionObserver | null>(null);
   const lastIntersection = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
-  const getPhotos = useCallback(async (pageToFetch: number) => {
+
+  const getPhotos = useCallback(async (pageToFetch: number, query?: string) => {
     setLoading(true);
-
-    const apiKey = process.env.REACT_APP_PEXELS_API_KEY ?? "";
-    const url = `https://api.pexels.com/v1/search?query=nature&per_page=15&page=${pageToFetch}`;
-
-    try {
-      const response = await fetch(url, {
-        headers: { Authorization: apiKey },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch photos. Status: ${response.status}`);
-      }
-
-      const data: PhotosApiResponse = await response.json();
-      setPhotos((prevPhotos) => [...prevPhotos, ...data.photos]);
-      setPage(pageToFetch + 1);
-    } catch (error) {
-      console.error("Error fetching photos:", error);
-    } finally {
-      setLoading(false);
-    }
+    const newPhotos = await fetchPhotos(pageToFetch, query);
+    setPhotos((prevPhotos) => [...prevPhotos, ...newPhotos]);
+    setPage(pageToFetch + 1);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
     setPhotos([]);
-    getPhotos(1);
-  }, [getPhotos]);
+    getPhotos(1, searchparam);
+  }, [getPhotos, searchparam]);
 
   useEffect(() => {
     if (loading) return;
@@ -76,7 +69,7 @@ const MasonryGrid = () => {
     const handleIntersect: IntersectionObserverCallback = (entries) => {
       const isVisible = entries[0].isIntersecting;
       if (isVisible && photos.length > 0) {
-        getPhotos(page);
+        getPhotos(page, searchparam);
       }
     };
 
@@ -89,7 +82,7 @@ const MasonryGrid = () => {
     return () => {
       observer.current?.disconnect();
     };
-  }, [loading, photos, page, getPhotos]);
+  }, [loading, photos, page, getPhotos, searchparam]);
 
   const columns = useMemo(() => {
     const columnsArray: Photo[][] = Array(COLUMNCOUNT)
@@ -109,22 +102,25 @@ const MasonryGrid = () => {
   };
   return (
     <Container>
+      <Search onClick={setSearchParam} />
+      <PhotosContainer>
+        {columns.map((column, columnIndex) => (
+          <MasonryColumn key={columnIndex}>
+            {column.map((photo: Photo, index: number) => (
+              <ImageContainer
+                key={photo.id}
+                onClick={() => handleImageClick(photo.id)}
+              >
+                <Image src={photo.src.medium} loading="lazy" />
+                {columnIndex === 2 && index === column.length - 1 && (
+                  <div ref={lastIntersection} />
+                )}
+              </ImageContainer>
+            ))}
+          </MasonryColumn>
+        ))}
+      </PhotosContainer>
       {loading && <div>Loading Photos...</div>}
-      {columns.map((column, columnIndex) => (
-        <MasonryColumn key={columnIndex}>
-          {column.map((photo: Photo, index: number) => (
-            <ImageContainer
-              key={photo.id}
-              onClick={() => handleImageClick(photo.id)}
-            >
-              <Image src={photo.src.medium} loading="lazy" />
-              {columnIndex === 2 && index === column.length - 1 && (
-                <div ref={lastIntersection} />
-              )}
-            </ImageContainer>
-          ))}
-        </MasonryColumn>
-      ))}
     </Container>
   );
 };
