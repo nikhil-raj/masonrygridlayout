@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MasonryGrid from "./components/MasonryGrid";
 import PhotoDetail from "./components/PhotoDetails";
@@ -8,8 +8,6 @@ const StyledHeader = styled.h1`
   padding: 1 rem;
   text-align: center;
 `;
-
-const Button = styled.button``;
 
 function App() {
   return (
