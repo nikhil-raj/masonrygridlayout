@@ -13,7 +13,8 @@ export const fetchPhotos = async (
   try {
     const response = await fetch(url, {
       headers: {
-        Authorization: apiKey || "",
+        Authorization:
+          "plS57qPHcGoq12Las98OadeAYN3DUTZlQTHi7IaJk1pZ6glyhJh4bEes",
       },
     });
     if (!response.ok) {
